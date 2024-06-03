@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        form {
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: auto;
+        }
+        input, button {
+            display: block;
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .button-links {
+    margin-top: 20px;
+}
+
+.button-links a {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-right: 10px;
+    text-decoration: none;
+    color: #007bff; /* Button color */
+    border: 1px solid #007bff; /* Button border color */
+    border-radius: 4px;
+    background-color: transparent;
+}
+
+.button-links a:hover {
+    text-decoration: underline; /* Underline on hover */
+    background-color: #007bff; /* Hover background color */
+    color: #fff; /* Hover text color */
+}
+
+.button-links a:first-child {
+    margin-right: 20px;
+}
+
+        .sub {
+            padding: 10px 20px;
+            background-color: #28a745;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .sub:hover {
+            background-color: #218838;
+        }
+        #display-area {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font: menu;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <link rel="stylesheet" href="css/login.css">
+    <script>
+        async function displayFormData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+            const displayArea = document.getElementById('display-area');
+            displayArea.innerHTML = '';
+
+            if (data.length > 0) {
+                const table = document.createElement('table');
+                const headerRow = document.createElement('tr');
+                const headers = ['Name', 'Email', 'Phone Number', 'Actions'];
+
+                headers.forEach(headerText => {
+                    const header = document.createElement('th');
+                    header.textContent = headerText;
+                    headerRow.appendChild(header);
+                });
+                table.appendChild(headerRow);
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    ['name', 'email', 'number'].forEach(key => {
+                        const cell = document.createElement('td');
+                        cell.textContent = item[key];
+                        row.appendChild(cell);
+                    });
+
+                    // Add actions cell
+                    const actionsCell = document.createElement('td');
+                    actionsCell.style.display = 'flex';
+                    actionsCell.style.gap = '10px';
+
+                    const updateButton = document.createElement('button');
+                    updateButton.textContent = 'Update';
+                    updateButton.style.backgroundColor = '#ffc107';
+                    updateButton.style.color = 'white';
+                    updateButton.style.border = 'none';
+                    updateButton.style.borderRadius = '4px';
+                    updateButton.style.padding = '5px 10px';
+                    updateButton.onclick = () => populateUpdateForm(item);
+                    actionsCell.appendChild(updateButton);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.style.backgroundColor = '#dc3545';
+                    deleteButton.style.color = 'white';
+                    deleteButton.style.border = 'none';
+                    deleteButton.style.borderRadius = '4px';
+                    deleteButton.style.padding = '5px 10px';
+                    deleteButton.onclick = () => deleteEntry(item.number);
+                    actionsCell.appendChild(deleteButton);
+
+                    row.appendChild(actionsCell);
+                    table.appendChild(row);
+                });
+
+                displayArea.appendChild(table);
+            } else {
+                displayArea.textContent = 'No data available';
+            }
+        }
+
+        function toggleForms(showCreateForm) {
+            const createForm = document.getElementById('create-form');
+            const updateForm = document.getElementById('update-form');
+            if (showCreateForm) {
+                createForm.style.display = 'block';
+                updateForm.style.display = 'none';
+            } else {
+                createForm.style.display = 'none';
+                updateForm.style.display = 'block';
+            }
+        }
+
+        function populateUpdateForm(item) {
+            document.getElementById('update-name').value = item.name;
+            document.getElementById('update-email').value = item.email;
+            document.getElementById('update-number').value = item.number;
+            document.getElementById('original-number').value = item.number;
+            toggleForms(false); // Show the update form and hide the create form
+        }
+
+        async function updateFormData() {
+            const name = document.getElementById('update-name').value;
+            const email = document.getElementById('update-email').value;
+            const number = document.getElementById('update-number').value;
+            const originalNumber = document.getElementById('original-number').value;
+
+            const response = await fetch(`/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ originalNumber, name, email, number }),
+            });
+
+            const data = await response.text();
+            alert(data);
+            displayFormData();
+            toggleForms(true); // Show the create form and hide the update form
+        }
+
+        async function deleteEntry(number) {
+            try {
+                const response = await fetch(`/delete/${number}`, {
+                    method: 'DELETE',
+                });
+                const data = await response.text();
+                alert(data);
+                displayFormData();
+            } catch (error) {
+                console.error('Error deleting entry:', error);
+                alert('Failed to delete entry');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>PhoneBook</h1>
+    <form id="create-form" action="/create" method="post">
+        <input placeholder="Name" name="name" type="text" required>
+        <input placeholder="Phone number" name="number" type="number" required>
+        <input placeholder="Email" name="email" type="email" required>
+        <div class="button-container">
+            <input class="sub" type="submit" value="Submit">
+            <button class="sub" type="button" onclick="displayFormData()">Display</button>
+        </div>
+    </form>
+    <form id="update-form" style="display: none;">
+        <h2>Update Entry</h2>
+        <input id="update-name" placeholder="Name" name="name" type="text" required>
+        <input id="update-email" placeholder="Email" name="email" type="email" required>
+        <input id="update-number" placeholder="Phone number" name="number" type="number" required>
+        <input id="original-number" type="hidden" name="originalNumber">
+        <div class="button-container">
+            <button class="sub" type="button" onclick="updateFormData()">Update</button>
+            <button class="sub" type="button" onclick="toggleForms(true)">Cancel</button>
+        </div>
+    </form>
+    <div class="button-links">
+        <a href="/upload">Upload Phonebook Entries</a>
+        <a href="/">Go back to login page</a>
+    </div>
+    <pre id="display-area"></pre>
+</body>
+</html>
